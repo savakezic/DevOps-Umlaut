@@ -1,0 +1,103 @@
+---
+- name: Updating packages
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: "apt-get update"
+    apt:
+      update_cache: yes
+      allow_unauthenticated: yes
+
+- name: Installing php-fpm and starting the service
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: "installint php-fpm"
+    apt:
+      name: php-fpm
+      state: latest
+
+  - name: "starting the php7.4-fpm service"
+    service: 
+      name: "php7.4-fpm"
+      enabled: yes
+      state: started
+
+- name: Installing Nginx and starting the web server
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: Installing Nginx
+    apt:
+      name: nginx
+      state: latest
+
+  - name: Stopping the Nginx service
+    service:
+      name: nginx
+      state: stopped
+
+  - name: Deleting default Nginx enabled site
+    file:
+      path: "{{ site_en_path }}/default"
+      state: absent
+
+  - name: Deleting default Nginx site configuration
+    file:
+      path: "{{ site_av_path }}/default"
+      state: absent
+
+  - name: Copy PHP web application
+    copy:
+      src: "{{ php_app }}/"
+      dest: "{{ app_loc_path }}/{{ name }}/"
+
+  - name: Copy server configuarion files
+    copy:
+      src: "{{ confs_path }}/{{ name }}{{ item }}.com"
+      dest: "{{ site_av_path }}/"
+    loop:
+      - 0
+      - 1
+      - 2
+
+  - name: Make enable server links
+    file:
+      src: "{{ site_av_path }}/{{ name }}{{ item }}.com"
+      dest: "{{ site_en_path }}/{{ name }}{{ item }}.com"
+      state: link
+    loop:
+      - 0
+      - 1
+      - 2
+
+  - name: Make log files
+    file: 
+      path: "{{ app_loc_path }}/{{ name }}/{{ item }}.log"
+      state: touch
+    loop:
+      - access
+      - error
+      - upstream
+
+  - name: Insert DNS entries
+    lineinfile: 
+      path: /etc/hosts
+      line: "127.0.0.1\t{{ name }}{{ item }}.com"
+      state: present
+    loop:
+      - ""
+      - 0
+      - 1
+      - 2
+
+  - name: Restart Nginx service
+    service:
+      name: nginx
+      state: restarted
+
+
+

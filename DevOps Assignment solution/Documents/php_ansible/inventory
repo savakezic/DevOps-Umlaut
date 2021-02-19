@@ -1,0 +1,12 @@
+all:
+  hosts:
+    simpphpweb:
+      ansible_connection: local
+      name: simpphpweb
+      #ansible_host: IP of server maschine
+  vars:
+    site_en_path: /etc/nginx/sites-enabled
+    site_av_path: /etc/nginx/sites-available
+    app_loc_path: /var/www
+    php_app: /home/sava/Documents/php/simple-php-website
+    confs_path: /home/sava/Documents/simpphpweb_configs
